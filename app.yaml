@@ -4,13 +4,14 @@ metadata:
   name: krishinest-service
   namespace: testing
   annotations:
-    deployment.kubernetes.io/revision: "1"
-    kubernetes.io/change-cause: "Updated image to krishinest:v2"
+ #   deployment.kubernetes.io/revision: "1"
+    kubernetes.io/change-cause: "added revision history and commented revision"
 spec:
   replicas: 1                 
   selector:
     matchLabels:
       app: krishinest-service
+  revisionHistoryLimit: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
