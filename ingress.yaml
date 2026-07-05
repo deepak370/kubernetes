@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: krishinest-ingress
+  namespace: testing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: krishinest.pay1.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: krishinest-service
+            port:
+              number: 80

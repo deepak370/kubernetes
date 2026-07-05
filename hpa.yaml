@@ -1,0 +1,49 @@
+# 07-hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: krishinest-hpa
+  namespace: testing
+spec:
+  # ── What to scale ─────────────────────────────────────────────
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: krishinest-service
+
+  # ── Replica boundaries ─────────────────────────────────────────
+  minReplicas: 1              # never go below 2 — always HA
+  maxReplicas: 10             # never go above 10
+
+  # ── Scaling triggers ───────────────────────────────────────────
+  metrics:
+    # Scale up when average CPU across all pods exceeds 70%
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+
+    # Scale up when average memory exceeds 80%
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+  # ── Scaling behaviour ──────────────────────────────────────────
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60     # wait 60s before scaling up again
+      policies:
+        - type: Pods
+          value: 2                        # add max 2 pods at a time
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 120    # wait 2 min before scaling down
+      policies:
+        - type: Pods
+          value: 1                        # remove max 1 pod at a time
+          periodSeconds: 60

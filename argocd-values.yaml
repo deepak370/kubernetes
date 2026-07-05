@@ -1,0 +1,30 @@
+# argocd-values.yaml
+# Everything not listed here uses the chart's defaults
+
+server:
+  service:
+    type: NodePort              # bare-metal cluster — expose via NodePort
+    nodePortHttp: 30880         # fixed ports so they don't randomize
+    nodePortHttps: 30443
+
+configs:
+  params:
+    server.insecure: true       # skip ArgoCD's own TLS (fine for lab;
+                                # in prod you'd terminate TLS at Ingress)
+
+# Keep resource usage sane on a 2-node lab cluster
+controller:
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+
+repoServer:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits:   { cpu: 300m, memory: 256Mi }
+
+# Don't need these in a lab
+dex:
+  enabled: false                # SSO connector — disable for now
+notifications:
+  enabled: false                # Slack/email alerts — enable later

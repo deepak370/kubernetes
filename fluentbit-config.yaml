@@ -1,0 +1,72 @@
+# fluentbit-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentbit-config
+  namespace: testing
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush                     5
+        Daemon                    Off
+        Log_Level                 warn
+        storage.path              /var/lib/fluent-bit/
+        storage.sync              normal
+        storage.checksum          off
+        storage.max_chunks_up     128
+        storage.backlog.mem_limit 100M
+        storage.total_limit_size  2G
+
+    [INPUT]
+        Name              tail
+        Path              /var/www/html/krishinest/live/storage/logs/*
+        Tag               app.logs.krishinest.<logfile>
+        Tag_Regex         \/var\/www\/html\/krishinest\/live\/storage\/logs\/(?<logfile>[^\/]+)$
+        Path_Key          source_file
+        DB                /var/lib/fluent-bit/krishinest_app.db
+        DB.locking        true
+        Read_from_Head    true
+        Refresh_Interval  10
+        Rotate_Wait       30
+        Skip_Long_Lines   Off
+        Buffer_Chunk_Size 1M
+        Buffer_Max_Size   5M
+        Mem_Buf_Limit     100M
+        storage.type      filesystem
+
+    [INPUT]
+        Name              tail
+        Path              /var/log/nginx/*
+        Tag               app.logs.krishinest.<logfile>
+        Tag_Regex         \/var\/log\/nginx\/(?<logfile>[^\/]+)$
+        Path_Key          source_file
+        DB                /var/lib/fluent-bit/krishinest_nginx_logs.db
+        DB.locking        true
+        Read_from_Head    true
+        Refresh_Interval  10
+        Rotate_Wait       30
+        Skip_Long_Lines   On
+        Buffer_Chunk_Size 1M
+        Buffer_Max_Size   5M
+        Mem_Buf_Limit     100M
+        storage.type      filesystem
+
+    [FILTER]
+        Name    modify
+        Match   app.logs.krishinest.*
+        Add     app_name   krishinest.pay1.in
+        Add     server_ip  ${POD_IP}
+        Add     pod_name   ${POD_NAME}
+        Add     node_name  ${NODE_NAME}
+
+    [OUTPUT]
+        Name                       forward
+        Match                      app.logs.krishinest.*
+        Host                       192.168.1.6
+        Port                       24226
+        Compress                   gzip
+        Retry_Limit                False
+        workers                    2
+        net.connect_timeout        10
+        net.keepalive              on
+        net.keepalive_idle_timeout 60
